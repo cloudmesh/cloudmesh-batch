@@ -38,11 +38,11 @@ flake8
 version = readfile("VERSION")[0].strip()
 readme = readfile('README.rst')
 
-NAME = "cloudmesh.slurm"
-DESCRIPTION = "A command to manage a virtual slurm cluster"
+NAME = "cloudmesh.batch"
+DESCRIPTION = "A command called batch and foo for the cloudmesh shell"
 AUTHOR = "Gregor von Laszewski"
 AUTHOR_EMAIL = "laszewski@gmail.com"
-URL = "https://github.com/cloudmesh/cloudmesh.slurm"
+URL = "https://github.com/cloudmesh/cloudmesh.batch"
 LONG_DESCRIPTION = "\n".join(readme)
 
 
