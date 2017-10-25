@@ -1,0 +1,47 @@
+meta:
+    version: 4.1
+    kind: clouds
+cloudmesh:
+    profile:
+        firstname: TBD
+        lastname: TBD
+        email: TBD
+        user: TBD
+    github:
+        username: TBD
+    portal:
+        location: TBD
+        browser: firefox
+    batch:
+        experiment:
+           name: gregor-00000
+        active:
+        - comet
+        - juliet
+        clusters:
+            india:
+                cm_heading: India HPC CLuster
+                cm_host: india
+                cm_label: indiahpc
+                cm_type: slurm
+                cm_type_version: 14.11.9
+                credentials:
+                    username: TBD
+                    project: None
+                default:
+                    queue: delta
+                    experiment_dir: /N/u/{cloudmesh.batch.clusters.india.username}/experiment
+                    prefix: {cloudmesh.batch.clusters.india.username}
+            comet:
+                cm_heading: Comet HPC CLuster
+                cm_host: comet
+                cm_label: comethpc
+                cm_type: slurm
+                cm_type_version: 14.11.9
+                credentials:
+                    username: TBD
+                    project: None
+                default:
+                    queue: debug
+                    experiment_dir: /home/{cloudmesh.batch.clusters.comet.username}/experiment
+                    prefix: {cloudmesh.batch.clusters.comet.username}
