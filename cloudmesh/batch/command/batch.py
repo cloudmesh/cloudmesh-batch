@@ -1,112 +1,300 @@
 from __future__ import print_function
-from cloudmesh.shell.command import command
+from cloudmesh.shell.command import command, map_parameters
 from cloudmesh.shell.command import PluginCommand
-from cloudmesh.batch.api.manager import Manager
+from datetime import datetime
+from cloudmesh.batch.api.Batch import SlurmCluster
+from cloudmesh.variables import Variables
+from cloudmesh.DEBUG import VERBOSE
+from cloudmesh.common.Printer import Printer
+from cloudmesh.common.parameter import Parameter
+from cloudmesh.common.console import Console
+from pathlib import Path
+
+from pprint import pprint
+
+
+# from cloudmesh.batch.api.manager import Manager
+
+# TODO does docopts allow to break line in multilpe?
+
 
 class BatchCommand(PluginCommand):
 
+    # see also https://github.com/cloudmesh/client/blob/master/cloudmesh_client/shell/plugins/HpcCommand.py
     # noinspection PyUnusedLocal
     @command
     def do_batch(self, args, arguments):
-       """
+        """
         ::
 
-            Usage:
-                batch queue [--job=NAME][--cluster=CLUSTER][--format=FORMAT]
-                batch info [--cluster=CLUSTER][--format=FORMAT]
-                batch run list [ID] [--cluster=CLUSTER]
-                batch run output [ID] [--cluster=CLUSTER]
-                batch run rm [ID] [--cluster=CLUSTER]
-                batch run SCRIPT [--queue=QUEUE] [--t=TIME] [--N=nodes] [--name=NAME] [--cluster=CLUSTER][--dir=DIR][--group=GROUP][--format=FORMAT]
-                batch delete --job=NAME [--cluster=CLUSTER][--group=GROUP]
-                batch delete all [--cluster=CLUSTER][--group=GROUP][--format=FORMAT]
-                batch status [--job=name] [--cluster=CLUSTER] [--group=GROUP]
-                batch test --cluster=CLUSTER [--time=SECONDS]
+          Usage:
+            batch job create
+                --name=NAME
+                --cluster=CLUSTER
+                --script=SCRIPT
+                --executable=EXECUTABLE
+                --destination=DESTINATION
+                --source=SOURCE
+                [--companion-file=COMPANION_FILE]
+                [--outfile-name=OUTPUT_FILE_NAME]
+                [--suffix=SUFFIX]
+                [--overwrite]
+            batch job run [--name=NAMES] [--output=OUTPUT]
+            batch job fetch [--name=NAMES]
+            batch job remove [--name=NAMES]
+            batch job clean [--name=NAMES]
+            batch job set [--name=NAMES] PARAMETER=VALUE
+            batch job list [--name=NAMES] [--depth=DEPTH]
+            batch connection_test --job=JOB
+            batch cluster list [--cluster=CLUSTERS] [--depth=DEPTH]
+            batch cluster remove [--cluster=CLUSTERS]
+            batch cluster set [--cluster=CLUSTERS] PARAMETER=VALUE
 
-            Options:
-               --format=FORMAT  the output format [default: table]
+          Arguments:
+              FILE   a file name
+              INPUT_TYPE  tbd
 
-            Examples:
+          Options:
+              -f      specify the file
+              --depth=DEPTH   [default: 1]
+              --output=OUTPUT    [default: table]
 
-                Special notes
+          Description:
 
-                   if the group is specified only jobs from that group are
-                   considered. Otherwise the default group is used. If the
-                   group is set to None, all groups are used.
+            This command allows to submit batch jobs to queuing systems hosted
+            in an HBC center as a service directly form your commandline.
 
-                cms batch queue
-                    lists the details of the queues of the hpc cluster
+            We assume that a number of experiments are conducted with possibly
+            running the script multiple times. Each experiment will save the
+            batch script in its own folder.
 
-                cms batch queue --job=NAME
-                    lists the details of the job in the queue of the batch cluster
+            The output of the script can be saved in a destination folder. A virtual
+            directory is used to coordinate all saved files.
 
-                cms batch info
-                    lists the details of the batch cluster
+            The files can be located due to the use of the virtual directory on
+            multiple different data or file services
 
-                cms batch run SCRIPT
-                    submits the script to the cluster. The script will be
-                    copied prior to execution into the home directory on the
-                    remote machine. If a DIR is specified it will be copied
-                    into that dir.
-                    The name of the script is either specified in the script
-                    itself, or if not the default naming scheme of
-                    cloudmesh is used using the same index incremented name
-                    as in vms fro clouds: cloudmes husername-index
+            Authentication to the Batch systems is done viw the underlaying HPC
+            center authentication. We assume that the user has an account to
+            submit on these systems.
 
-                cms batch delete all
-                    kills all jobs on the default batch group
+            (SSH, 2 factor, XSEDE-account) TBD.
 
-                cms batch delete --job=NAME
-                    kills a job with a given name or job id
+          Experiments:
 
-                cms default cluster=NAME
-                    sets the default batch cluster
+            experiments are jobs that can be run multiple times and create input
+            and output file sin them
 
-                cms batch status
-                    returns the status of all jobs
+            cloudmesh:
+             experiment:
+               job:
+                 name: {cloudmesh.profile.user.name}-01
+                 directory: ~/experiment/{experiment.job.name}
+                 output:  {cloudmesh.experiment.job.name}/output
+                 input:  ~/experiment/{experiment.job.name}/input
+                 script: script.sh
+                 source ,,,
+                 destination: {cloudmesh.experiment.job.directory}
 
-                cms batch status job=ID
-                    returns the status of the named job
+            - queue associates with server (cloud)
+            - job could be run on queue and is associated with one or multiple
+            servers
+            - experiment is same as job, but gives some facility to run it
+            multiple times
 
-                cms batch test --cluster=CLUSTER --time=SECONDS
-                    submits a simple test job to the named cluster and returns
-                    if the job could be successfully executed. This is a
-                    blocking call and may take a long time to complete
-                    dependent on if the queuing system of that cluster is
-                    busy. It will only use one node/core and print the message
+            I do not know what companion file is
 
-                    #CLOUDMESH: Test ok
+          Examples:
 
-                    in that is being looked for to identify if the test is
-                    successful. If time is used, the job is terminated
-                    after the time is elapsed.
+             batch job run [--name=NAMES] [--output=OUTPUT]
 
-            Examples:
-                cms batch queue
-                cms batch queue --job=xxx
-                cms batch info
-                cms batch delete --job=6
-                cms batch delete all
-                cms batch status
-                cms batch status --job=6
-                cms batch run uname
-                cms batch run ~/test.sh --cluster=india
+                runs jobs with the given names
+
+             LOTS OF DOCUMENTATION MISSING HERE
+
+                [--companion-file=COMPANION_FILE]
+                [--outfile-name=OUTPUT_FILE_NAME]
+                [--suffix=SUFFIX] [--overwrite]
+
+
+
+
         """
-        arguments.FILE = arguments['--file'] or None
 
-        print(arguments)
+        #
+        # create slurm manager so it can be used in all commands
+        #
+        slurm_manager = SlurmCluster()  # debug=arguments["--debug"])
 
-        m = Manager()
+        arguments["--cloud"] = "test"
+        arguments["NAME"] = "fix"
 
+        map_parameters(arguments,
+                       "cloud",
+                       "name",
+                       "cluster",
+                       "script",
+                       "type",
+                       "destination",
+                       "source",
+                       "output")
 
-        if arguments.FILE:
-            print("option a")
-            m.list(arguments.FILE)
+        # if not arguments.create
+
+        #    find cluster name from Variables()
+        #    if no cluster is defined look it up in yaml in batch default:
+        #    if not defined there fail
+
+        #    clusters = Parameter.expand(arguments.cluster)
+        #    name = Parameters.expand[argumnets.name)
+        #    this will return an array of clusters and names of jobs and all cluster
+        #    job or clusterc commands will be executed on them
+        #    see the vm
+        #
+        #    if active: False in the yaml file for the cluster this cluster is not used and scipped.
+
+        VERBOSE(arguments)
+
+        variables = Variables()
+        # do not use print but use ,Console.msg(), Console.error(), Console.ok()
+        if arguments.tester:
+            print("running ... ")
+            slurm_manager.tester()
+        elif arguments.run and arguments.job:
+
+            # config = Config()["cloudmesh.batch"]
+
+            names = Parameter.expand(arguments.name)
+
+            # clouds, names = Arguments.get_cloud_and_names("refresh", arguments,
+            #                                    variables)
+
+            data = []
+            for name in names:
+                entry = SlurmCluster.job_specification()
+                data.append(entry)
+
+            '''
+             data = {
+            "cm": {
+                "cloud": "karst_debug",
+                "kind": "batch-job",
+                "name": "job012",
+            },
+            "batch": {
+                "source": "~/.cloudmesh/batch/dir",
+                "destination": "~/.cloudmesh/dir/",
+                "status": "running"
+            }
+            }'''
+
+            try:
+                raise NotImplementedError
+            except Exception as e:
+                Console.error("Haha", traceflag=True)
+
+            pprint(data)
+            print(Printer.flatwrite(
+                data,
+                order=["cm.name", "cm.kind", "batch.status"],
+                header=["Name", "Kind", "Status"],
+                output=arguments.output)
+            )
+
+            return ""
+        # handling batch job create sample command c
+        # cms batch job create --name newjob1 --cluster slurm-taito
+        # --script ./1_argsin_stdout.slurm --executable
+        # ./1_argsin_stdout_script.sh --destination /home/vafanda --source ~/tmp
+        elif arguments.job and \
+            arguments.create and \
+            arguments.name and \
+            arguments.cluster and \
+            arguments.script and \
+            arguments['--executable'] and \
+            arguments.destination and \
+            arguments.source:
+            job_name = arguments.name
+            cluster_name = arguments.cluster
+            script_path = Path(arguments.script)
+            if not script_path.exists():
+                raise FileNotFoundError
+            executable_path = Path(arguments['--executable'])
+            if not executable_path.exists():
+                raise FileNotFoundError
+            destination = Path(arguments.destination)
+            if not destination.is_absolute():
+                Console.error("destination path must be absolute",
+                              traceflag=True)
+                raise FileNotFoundError
+            source = Path(arguments.source)
+            if not source.exists():
+                raise FileNotFoundError
+            if arguments.experiment is None:
+                experiment_name = 'job' + self.suffix_generator()
+            else:
+                experiment_name = arguments.experiment + self.suffix_generator()
+            if arguments.get("--companion-file") is None:
+                companion_file = Path()
+            else:
+                companion_file = Path(arguments.get("--companion-file"))
+            slurm_manager.create(job_name,
+                                 cluster_name,
+                                 script_path,
+                                 executable_path,
+                                 destination,
+                                 source,
+                                 experiment_name,
+                                 companion_file)
+
+        elif arguments.remove:
+            if arguments.cluster:
+                slurm_manager.remove("cluster", arguments.get("CLUSTER_NAME"))
+            if arguments.job:
+                slurm_manager.remove("job", arguments.get("JOB_NAME"))
 
         elif arguments.list:
-            print("option b")
-            m.list("just calling list without parameter")
+            max_depth = 1 if arguments.get("DEPTH") is None else int(arguments.get("DEPTH"))
+            if arguments.get("clusters"):
+                slurm_manager.list("clusters", max_depth)
+            elif arguments.get("jobs"):
+                slurm_manager.list("jobs", max_depth)
 
+        elif arguments.set:
+            if arguments.get("cluster"):
+                cluster_name = arguments.get("CLUSTER_NAME")
+                parameter = arguments.get("PARAMETER")
+                value = arguments.get("VALUE")
+                slurm_manager.set_param("cluster", cluster_name, parameter, value)
 
+            if arguments.job:
+                config_name = arguments.get("JOB_NAME")
+                parameter = arguments.get("PARAMETER")
+                value = arguments.get("VALUE")
+                slurm_manager.set_param("job-metadata", config_name, parameter, value)
+        elif arguments.start and arguments.job:
+            job_name = arguments.get("JOB_NAME")
+            slurm_manager.run(job_name)
+        elif arguments.get("fetch"):
+            job_name = arguments.get("JOB_NAME")
+            slurm_manager.fetch(job_name)
+        elif arguments.connection_test:
+            slurm_manager.connection_test(arguments.job)
+        elif arguments.clean:
+            job_name = arguments.get("JOB_NAME")
+            slurm_manager.clean_remote(job_name)
 
+    def suffix_generator(self):
+        """
 
+        We do not want a random suffix, we want a numbered suffix. THis can be
+        generated with the name method in the name.py function which can take a
+        schema, so yo ucan create a schema for job or clusternames if needed
+        Generate random suffix based on the time
+
+        :return: string
+        """
+        return '_' + str(datetime.now()).replace('-', ''). \
+                         replace(' ', '_').replace(':', '') \
+            [0:str(datetime.now()).replace('-', '').replace(' ', '_'). \
+                   replace(':', '').index('.') + 3].replace('.', '')
