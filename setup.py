@@ -54,11 +54,11 @@ def read(fname):
 with open('README.md') as f:
     long_description = f.read()
 
-NAME = "cloudmesh-hpc"
+NAME = "cloudmesh-batch"
 DESCRIPTION = "Cloudmesh Multicloud Cloud Plugins for Cloudmesh cmd5 CMD"
 AUTHOR = "Gregor von Laszewski"
 AUTHOR_EMAIL = "laszewski@gmail.com"
-URL = "https://github.com/cloudmesh/cloudmesh-hpc"
+URL = "https://github.com/cloudmesh/cloudmesh-batch"
 
 
 setup(
