@@ -1,4 +1,4 @@
-package=hpc
+package=batch
 UNAME=$(shell uname)
 VERSION=`head -1 VERSION`
 
