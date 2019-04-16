@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # ----------------------------------------------------------------------- #
-# Copyright 2017, Gregor von Laszewski, Indiana University                #
+# Copyright 2008-2010, Gregor von Laszewski                               #
+# Copyright 2010-2018, cloudmesh.org                                      #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may #
 # not use this file except in compliance with the License. You may obtain #
@@ -14,58 +15,95 @@
 # See the License for the specific language governing permissions and     #
 # limitations under the License.                                          #
 # ------------------------------------------------------------------------#
+from setuptools import setup, find_packages
 
-from setuptools import find_packages, setup
+import os
+import platform
+import sys
 import io
 
-def readfile(filename):
-    with io.open(filename, encoding="utf-8") as stream:
-        return stream.read().split()
+from setuptools import find_packages, setup
 
 
-#requiers = readfile ('requirements.txt')
+v = sys.version_info
+if v.major != 3 and v.minor != 7 and v.micro < 2:
+    print(70 * "#")
+    print("WARNING: upgrade to a python greater or eaqual to 3.7.2 "
+          "other version may not be  supported. "
+          "Your version is {version}. ".format(version=sys.version_info))
+    print(70 * "#")
+
+command = None
+this_platform = platform.system().lower()
+#if this_platform in ['darwin']:
+#    command = "easy_install readline"
+#elif this_platform in ['windows']:
+#    command = "pip install pyreadline"
+#if command is not None:
+#    print("Install readline")
+#    os.system(command)
+
 requiers = """
-psutil
-pygments
-tox
-detox
-coverage
-flake8
+munch
 """.split("\n")
 
-# dependency_links = ['http://github.com/nicolaiarocci/eve.git@develop']
 
-version = readfile("VERSION")[0].strip()
-readme = readfile('README.rst')
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-NAME = "cloudmesh.batch"
-DESCRIPTION = "A command called batch and foo for the cloudmesh shell"
+with open('README.md') as f:
+    long_description = f.read()
+
+NAME = "cloudmesh-hpc"
+DESCRIPTION = "Cloudmesh Multicloud Cloud Plugins for Cloudmesh cmd5 CMD"
 AUTHOR = "Gregor von Laszewski"
 AUTHOR_EMAIL = "laszewski@gmail.com"
-URL = "https://github.com/cloudmesh/cloudmesh.batch"
-LONG_DESCRIPTION = "\n".join(readme)
+URL = "https://github.com/cloudmesh/cloudmesh-hpc"
 
 
-setup \
-(
+setup(
     name=NAME,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    version=version,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    version="4.0.0",
     license="Apache 2.0",
     url=URL,
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests",
+                                    "deprecated",
+                                    "propose",
+                                    "examples",
+                                    "conda")),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Environment :: Web Environment",
+        "Environment :: Console",
+        "Environment :: MacOS X",
+        "Environment :: OpenStack",
+        "Environment :: Other Environment",
+        "Environment :: Plugins",
+        "Intended Audience :: Information Technology",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: Apache Software License",
+        "Natural Language :: English",
         "Operating System :: OS Independent",
+        "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows :: Windows 10",
+        "Operating System :: Unix",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Topic :: Internet",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: User Interfaces",
+        "Topic :: System",
+        "Topic :: System :: Distributed Computing",
+        "Topic :: System :: Shells",
+        "Topic :: Utilities",
     ],
     install_requires=requiers,
     tests_require=[
