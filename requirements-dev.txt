@@ -5,3 +5,4 @@ sphinx_rtd_theme
 pytest
 flake8
 twine
+pytest-cov

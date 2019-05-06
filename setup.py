@@ -44,6 +44,9 @@ this_platform = platform.system().lower()
 #    os.system(command)
 
 requiers = """
+cloudmesh-common
+cloudmesh-cmd5
+cloudmesh-sys
 munch
 """.split("\n")
 
