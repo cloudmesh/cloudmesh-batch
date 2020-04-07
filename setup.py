@@ -15,15 +15,12 @@
 # See the License for the specific language governing permissions and     #
 # limitations under the License.                                          #
 # ------------------------------------------------------------------------#
-from setuptools import setup, find_packages
 
 import os
 import platform
 import sys
-import io
 
 from setuptools import find_packages, setup
-
 
 v = sys.version_info
 if v.major != 3 and v.minor != 7 and v.micro < 3:
@@ -47,6 +44,7 @@ requiers = """
 cloudmesh-common
 cloudmesh-cmd5
 cloudmesh-sys
+cloudmesh-configuration
 munch
 """.split("\n")
 

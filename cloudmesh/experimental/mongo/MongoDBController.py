@@ -4,14 +4,13 @@ import urllib.parse
 from sys import platform
 
 import yaml
-from pymongo import MongoClient
-
 from cloudmesh.common.Shell import Shell, Brew
 from cloudmesh.common.console import Console
 from cloudmesh.common.dotdict import dotdict
-from cloudmesh.management.configuration.config import Config
+from cloudmesh.configuration.Config import Config
 from cloudmesh.management.script import Script, SystemPath
 from cloudmesh.management.script import find_process
+from pymongo import MongoClient
 
 
 # noinspection PyUnusedLocal
