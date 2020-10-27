@@ -13,7 +13,7 @@ from cloudmesh.common.console import Console
 
 class QueueCommand(PluginCommand):
 
-    # see also https://github.com/cloudmesh/client/blob/master/cloudmesh_client/shell/plugins/HpcCommand.py
+    # see also https://github.com/cloudmesh/client/blob/main/cloudmesh_client/shell/plugins/HpcCommand.py
     # noinspection PyUnusedLocal
     @command
     def do_queue(self, args, arguments):

@@ -20,7 +20,7 @@ from pprint import pprint
 
 class BatchCommand(PluginCommand):
 
-    # see also https://github.com/cloudmesh/client/blob/master/cloudmesh_client/shell/plugins/HpcCommand.py
+    # see also https://github.com/cloudmesh/client/blob/main/cloudmesh_client/shell/plugins/HpcCommand.py
     # noinspection PyUnusedLocal
     @command
     def do_batch(self, args, arguments):
